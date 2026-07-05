@@ -32,18 +32,22 @@ all_trips_v2 %>%
     avg_ride_length_min = mean(ride_length_sec) / 60
   )
 
-# Plotting weekly activity (Number of Rides)
+# Plotting weekly activity (Number of Rides) with proper day names
 all_trips_v2 %>% 
-  group_by(member_casual, day_of_week) %>% 
-  summarize(number_of_rides = n()) %>% 
-  ggplot(aes(x = factor(day_of_week), y = number_of_rides, fill = member_casual)) +
+  mutate(day_name = wday(started_at, label = TRUE, abbr = FALSE)) %>% 
+  group_by(member_casual, day_name) %>% 
+  summarize(number_of_rides = n(), .groups = "drop") %>% 
+  ggplot(aes(x = day_name, y = number_of_rides, fill = member_casual)) +
   geom_col(position = "dodge") +
+  scale_y_continuous(labels = scales::comma) + # Removes scientific notation like 5e+05
   labs(
-    title = "Number of Rides by Day of the Week",
-    x = "Day of Week (1 = Sunday, 7 = Saturday)",
+    title = "Ridership: Weekly Activity Comparison",
+    subtitle = "Number of rides per day for members vs casual riders",
+    x = "Day of the Week",
     y = "Total Number of Rides",
     fill = "User Type"
-  )
+  ) +
+  theme_minimal() # Clean, modern look without heavy gray background
 
 # ------------------------------------------
 # 3. Monthly Activity (Seasonality)
