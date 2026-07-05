@@ -94,3 +94,51 @@ all_trips_v2 %>%
     fill = "User Type"
   ) +
   theme_minimal()
+
+# Analyzing bike type preferences by user type
+all_trips_v2 %>% 
+  group_by(member_casual, rideable_type) %>% 
+  summarize(number_of_rides = n(), .groups = "drop") %>% 
+  ggplot(aes(x = rideable_type, y = number_of_rides, fill = member_casual)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(labels = scales::comma) +
+  labs(
+    title = "Ridership: Bike Type Preferences",
+    subtitle = "Distribution of bike types used by casual riders vs members",
+    x = "Bike Type",
+    y = "Number of Rides",
+    fill = "User Type"
+  ) +
+  theme_minimal()
+
+# Top 10 start stations for casual riders
+all_trips_v2 %>% 
+  filter(member_casual == "casual", !is.na(start_station_name)) %>% 
+  group_by(start_station_name) %>% 
+  summarize(number_of_rides = n(), .groups = "drop") %>% 
+  slice_max(order_by = number_of_rides, n = 10)
+
+# Visualizing Top 10 start stations for casual riders vs members
+top_casual_stations <- all_trips_v2 %>% 
+  filter(member_casual == "casual", !is.na(start_station_name)) %>% 
+  group_by(start_station_name) %>% 
+  summarize(number_of_rides = n(), .groups = "drop") %>% 
+  slice_max(order_by = number_of_rides, n = 10) %>% 
+  pull(start_station_name)
+
+all_trips_v2 %>% 
+  filter(start_station_name %in% top_casual_stations) %>% 
+  group_by(start_station_name, member_casual) %>% 
+  summarize(number_of_rides = n(), .groups = "drop") %>% 
+  ggplot(aes(x = reorder(start_station_name, number_of_rides), y = number_of_rides, fill = member_casual)) +
+  geom_col(position = "dodge") +
+  coord_flip() +
+  scale_y_continuous(labels = scales::comma) +
+  labs(
+    title = "Ridership: Top 10 Casual Start Stations Comparison",
+    subtitle = "Casual riders heavily dominate key tourist spots and leisure areas",
+    x = "Station Name",
+    y = "Number of Rides",
+    fill = "User Type"
+  ) +
+  theme_minimal()
