@@ -1,5 +1,9 @@
+# Ignore data folder and files
 .Rproj.user
 .Rhistory
 .RData
-.Ruserdata
-.csv
+.RDataTmp
+.RDataData
+*.csv
+*.xlsx
+data/
