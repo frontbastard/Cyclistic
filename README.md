@@ -24,4 +24,4 @@ The analysis uses Cyclistic's historical trip data (approx. 1.2 GB, over 6 milli
 * **Git/GitHub** (for version control)
 
 ---
-*Created by [Your Name] - 2026*
+*Created by Pavlo Sokolov - 2026*

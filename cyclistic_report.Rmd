@@ -1,0 +1,133 @@
+---
+title: "Cyclistic Bike-Share Analysis Case Study"
+author: "Pavlo Sokolov"
+date: "2026-07-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# Global options for chunks
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+
+# Load required libraries
+library(tidyverse)
+library(lubridate)
+library(scales)
+
+# Load the cleaned dataset into the R Markdown isolated session
+all_trips_v2 <- readRDS("all_trips_cleaned.rds")
+```
+
+## Executive Summary
+
+This case study analyzes the historical trip data of Cyclistic, a prominent bike-share company in Chicago. The primary objective is to identify key behavioral differences between two distinct user types: **casual riders** and **annual members**. 
+
+By understanding these patterns, the marketing team aims to design effective strategies to convert casual riders into long-term annual members, ensuring sustainable financial growth for the company.
+
+## 1. Data Preparation & Cleaning
+
+The analysis utilizes Cyclistic's historical trip data. Due to the massive scale of the dataset (exceeding 1.2 GB of raw data), the data was processed and cleaned using R to ensure integrity and performance. 
+
+Key data transformation steps included:
+* Removing duplicate and incomplete records (missing station names).
+* Filtering out negative or unrealistically long trip durations (under 1 minute or over 24 hours).
+* Extracting temporal components such as day of the week, month, and hour from timestamps.
+
+## 2. Key Findings & Visualizations
+
+### 2.1. Monthly Seasonality: When Do People Ride?
+
+Our first step is to understand the overall demand throughout the year. The chart below visualizes the total number of rides per month, segmented by user type.
+
+```{r monthly-seasonality, echo=FALSE, fig.width=10, fig.height=6}
+# Order months logically
+all_trips_v2$month <- ordered(all_trips_v2$month, levels=c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"))
+
+# Plot total rides by month
+all_trips_v2 %>% 
+  group_by(member_casual, month) %>% 
+  summarize(number_of_rides = n(), .groups = "drop") %>% 
+  ggplot(aes(x = month, y = number_of_rides, fill = member_casual)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(labels = scales::comma) +
+  labs(
+    title = "Ridership: Monthly Seasonality",
+    subtitle = "Peak usage occurs during summer months (June-August) for both user types",
+    x = "Month",
+    y = "Total Number of Rides",
+    fill = "User Type"
+  ) +
+  theme_minimal()
+```
+
+**Key Insight:** Both casual riders and members show a strong preference for summer months. However, member usage remains relatively stable during spring and autumn, whereas casual ridership drops significantly outside the peak summer season.
+
+### 2.2. Ride Duration: How Long Do They Ride?
+
+While members might ride more frequently, analyzing the average trip duration reveals a completely different behavior pattern, particularly during weekends.
+
+```{r ride-duration, echo=FALSE, fig.width=10, fig.height=6}
+# Plot average ride length by day of week
+all_trips_v2 %>% 
+  mutate(day_name = wday(started_at, label = TRUE, abbr = FALSE)) %>% 
+  group_by(member_casual, day_name) %>% 
+  summarize(average_ride_length_min = mean(ride_length_sec) / 60, .groups = "drop") %>% 
+  ggplot(aes(x = day_name, y = average_ride_length_min, fill = member_casual)) +
+  geom_col(position = "dodge") +
+  scale_y_continuous(labels = scales::comma) +
+  labs(
+    title = "Ridership: Average Ride Length Comparison",
+    subtitle = "Casual riders consistently take much longer trips, especially on weekends",
+    x = "Day of the Week",
+    y = "Average Trip Duration (minutes)",
+    fill = "User Type"
+  ) +
+  theme_minimal()
+```
+
+**Key Insight:** Casual riders take significantly longer trips on average compared to members. This behavior peaks on weekends (Saturday and Sunday), strongly indicating leisure or tourist activities rather than standard commuting.
+
+### 2.3. Station Geography: Where Do Trips Start?
+
+To pinpoint exactly where marketing campaigns should be deployed, we analyzed the Top 10 start stations heavily used by casual riders and compared them directly to member usage at those same locations.
+
+```{r top-stations, echo=FALSE, fig.width=10, fig.height=6}
+# Identify top 10 casual stations
+top_casual_stations <- all_trips_v2 %>% 
+  filter(member_casual == "casual", !is.na(start_station_name)) %>% 
+  group_by(start_station_name) %>% 
+  summarize(number_of_rides = n(), .groups = "drop") %>% 
+  slice_max(order_by = number_of_rides, n = 10) %>% 
+  pull(start_station_name)
+
+# Plot comparison
+all_trips_v2 %>% 
+  filter(start_station_name %in% top_casual_stations) %>% 
+  group_by(start_station_name, member_casual) %>% 
+  summarize(number_of_rides = n(), .groups = "drop") %>% 
+  ggplot(aes(x = reorder(start_station_name, number_of_rides), y = number_of_rides, fill = member_casual)) +
+  geom_col(position = "dodge") +
+  coord_flip() +
+  scale_y_continuous(labels = scales::comma) +
+  labs(
+    title = "Ridership: Top 10 Casual Start Stations Comparison",
+    subtitle = "Casual riders heavily dominate key tourist spots and leisure areas",
+    x = "Station Name",
+    y = "Total Number of Rides",
+    fill = "User Type"
+  ) +
+  theme_minimal()
+```
+
+**Key Insight:** The data proves that casual riders completely dominate waterfront stations, parks, and major tourist hubs like *Navy Pier* and *Millennium Park*. Annual members rarely start their trips from these leisure-focused locations.
+
+---
+
+## 3. Marketing Recommendations
+
+Based on the insights gathered from seasonality, trip duration, and geographical behavior, here are the top 3 targeted strategies to convert casual riders into annual members:
+
+1. **Location-Based Summer Campaigns:** Launch aggressive physical and digital marketing campaigns directly at the top casual stations (*Navy Pier*, *DuSable Lake Shore Dr*, *Millennium Park*). These should run exclusively during peak summer (June–August) when casual traffic is at its absolute highest.
+2. **The "Weekend Warrior" Membership:** Introduce a seasonal or weekend-focused membership tier, or heavily emphasize weekend cost-savings in marketing materials. Since casual riders primarily use Cyclistic for long weekend leisure trips, showing them how much they would save over a summer using a membership versus paying per-minute will be a strong financial hook.
+3. **Electric Bike Incentives for Members:** Since electric bikes are highly popular among both groups, offer exclusive member-only perks for e-bikes (e.g., waived unlocking fees or cheaper per-minute rates for members). This leverages the high demand for e-bikes to make the annual subscription significantly more attractive.
+```
