@@ -7,3 +7,5 @@
 *.csv
 *.xlsx
 data/
+
+all_trips_cleaned.rds
