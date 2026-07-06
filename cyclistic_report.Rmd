@@ -33,6 +33,16 @@ Key data transformation steps included:
 * Filtering out negative or unrealistically long trip durations (under 1 minute or over 24 hours).
 * Extracting temporal components such as day of the week, month, and hour from timestamps.
 
+### 1.1. Data Reliability & Limitations
+
+While the dataset provides a massive sample size (over 6 million rows), certain limitations and potential anomalies were identified during the high-level cleaning phase:
+
+* **Potential Outliers in Trip Duration:** Although trips longer than 24 hours were removed, extreme values (e.g., trips lasting 12 to 23 hours) remain in the dataset. These are often caused by users failing to lock bikes properly or system errors. Because the **mean** was used for duration metrics, these outliers may slightly skew the average ride length upward, particularly for casual riders.
+* **False Starts:** Trips that lasted between 1 and 2 minutes with identical start and end stations were preserved. A portion of these likely represent "false starts," where a user unlocked a bike, noticed a mechanical issue, and immediately docked it back. 
+* **Administrative Records:** The raw data contains a small fraction of missing station IDs and names, as well as entries linked to maintenance hubs (e.g., repair shops). While mostly filtered out by removing `NA` values, a deeper data validation process would be required to fully isolate corporate or testing data from genuine customer behavior.
+
+*Conclusion:* Despite these minor anomalies, the sheer volume of the dataset ensures that the high-level behavioral trends—such as summer seasonality and weekend duration surges—remain statistically safe and highly reliable for business decision-making.
+
 ## 2. Key Findings & Visualizations
 
 ### 2.1. Monthly Seasonality: When Do People Ride?
@@ -130,4 +140,4 @@ Based on the insights gathered from seasonality, trip duration, and geographical
 1. **Location-Based Summer Campaigns:** Launch aggressive physical and digital marketing campaigns directly at the top casual stations (*Navy Pier*, *DuSable Lake Shore Dr*, *Millennium Park*). These should run exclusively during peak summer (June–August) when casual traffic is at its absolute highest.
 2. **The "Weekend Warrior" Membership:** Introduce a seasonal or weekend-focused membership tier, or heavily emphasize weekend cost-savings in marketing materials. Since casual riders primarily use Cyclistic for long weekend leisure trips, showing them how much they would save over a summer using a membership versus paying per-minute will be a strong financial hook.
 3. **Electric Bike Incentives for Members:** Since electric bikes are highly popular among both groups, offer exclusive member-only perks for e-bikes (e.g., waived unlocking fees or cheaper per-minute rates for members). This leverages the high demand for e-bikes to make the annual subscription significantly more attractive.
-```
+
