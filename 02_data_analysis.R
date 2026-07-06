@@ -142,3 +142,6 @@ all_trips_v2 %>%
     fill = "User Type"
   ) +
   theme_minimal()
+
+# Save final cleaned dataset for R Markdown report
+saveRDS(all_trips_v2, file = "all_trips_cleaned.rds")
